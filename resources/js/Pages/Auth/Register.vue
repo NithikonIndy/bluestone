@@ -22,6 +22,9 @@ const passwordMismatch = computed(() => {
 const submit = () => {
     if (!passwordMismatch.value) {
         form.post(route('register'), {
+            onSuccess: () => {
+                router.visit(route('login'));
+            },
             onFinish: () => form.reset('password', 'password_confirmation'),
         });
     }
@@ -37,16 +40,16 @@ const submit = () => {
             <!-- Name -->
             <div>
                 <InputLabel for="name" value="Name" />
-                <TextInput id="name" type="text" class="mt-1 block w-full text-gray-400" v-model="form.name" required
-                    autofocus autocomplete="name" placeholder="name" />
+                <TextInput id="name" type="text" class="mt-1 block w-full text-gray-900 placeholder-gray-400"
+                    v-model="form.name" required autofocus autocomplete="name" placeholder="name" />
                 <InputError class="mt-2" :message="form.errors.name" />
             </div>
 
             <!-- Email -->
             <div class="mt-4">
                 <InputLabel for="email" value="Email" />
-                <TextInput id="email" type="email" class="mt-1 block w-full text-gray-400" v-model="form.email" required
-                    autocomplete="username" placeholder="email" />
+                <TextInput id="email" type="email" class="mt-1 block w-full text-gray-900 placeholder-gray-400"
+                    v-model="form.email" required autocomplete="username" placeholder="email" />
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
@@ -55,7 +58,7 @@ const submit = () => {
                 <InputLabel for="password" value="Password" />
                 <TextInput id="password" type="password" class="mt-1 block w-full" :class="{
                     'border-red-500 ring-1 ring-red-300': passwordMismatch,
-                    'text-gray-400 border-gray-300': !passwordMismatch
+                    'text-gray-900 placeholder-gray-400': !passwordMismatch
                 }" v-model="form.password" required autocomplete="new-password" placeholder="password" />
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
@@ -65,7 +68,7 @@ const submit = () => {
                 <InputLabel for="password_confirmation" value="Confirm Password" />
                 <TextInput id="password_confirmation" type="password" class="mt-1 block w-full" :class="{
                     'border-red-500 ring-1 ring-red-300': passwordMismatch,
-                    'text-gray-400 border-gray-300': !passwordMismatch
+                    'text-gray-900 placeholder-gray-400': !passwordMismatch
                 }" v-model="form.password_confirmation" required autocomplete="new-password"
                     placeholder="confirm password" />
                 <InputError v-if="passwordMismatch" class="mt-2 text-red-600" message="Passwords do not match" />
@@ -82,7 +85,7 @@ const submit = () => {
                 Already registered?
                 </Link>
 
-                
+
                 <PrimaryButton class="ms-4" :class="{ 'opacity-25': form.processing || passwordMismatch }"
                     :disabled="form.processing || passwordMismatch">
                     Register
