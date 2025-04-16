@@ -6,23 +6,56 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
+
 
 // สำหรับแสดง modal
 import { ref } from 'vue';
 
-defineProps({
-    status: {
+// defineProps({
+//     status: {
+//         type: String,
+//     },
+// });
+
+const props = defineProps({
+    email: {
         type: String,
+        required: true,
+    },
+    verify: {
+        type: String,
+        required: true,
     },
 });
 
-// ฟอร์มที่ใช้ในการจัดการข้อมูล
 const form = useForm({
-    email: '',
+    verify: props.verify,
+    email: props.email,
+    password: '',
+    password_confirmation: '',
 });
+
+const passwordMismatch = computed(() => {
+    return form.password !== form.password_confirmation && form.password_confirmation !== '';
+});
+
+
+const submitReset = () => {
+    form.post(route('password.reset'), {
+        onSuccess: () => {
+            setTimeout(() => {
+            }, 3000); // Toast จะหายไปใน 3 วิ
+            closeModal();
+
+        },
+        onFinish: () => form.reset('password', 'password_confirmation'),
+    });
+};
 
 // ตัวแปรสำหรับควบคุมการแสดง modal
 const showModal = ref(false);
+const emailExists = ref(false);
 
 // ฟังก์ชันที่ใช้ในการแสดง modal
 const openModal = () => {
@@ -32,14 +65,36 @@ const openModal = () => {
 // ฟังก์ชันที่ใช้ในการปิด modal
 const closeModal = () => {
     showModal.value = false;
+    emailExists.value= false;
 };
 
-// ฟังก์ชันการส่งข้อมูล
-const submit = () => {
-    // ข้อความนี้จะยังไม่ทำการส่งฟอร์ม แต่คุณสามารถดำเนินการต่อได้เมื่อคุณพร้อม
-    alert("Form Submitted!");
-    closeModal(); // ปิด modal หลังจากส่งฟอร์ม
+const checkEmailExists = async () => {
+    try {
+        const response = await axios.post(route('check-email'), {
+            email: form.email,
+        });
+
+        if (response.data.exists) {
+            emailExists.value = true;
+            return true;
+        }
+    } catch (error) {
+        emailExists.value = false;
+        if (error.response && error.response.status === 404 && error.response.data.error === 'usernotfound') {
+            form.errors.email = 'email not found';
+
+        } else {
+            form.errors.email = 'error please re-check email';
+
+        }
+
+        return false;
+    }
 };
+
+
+
+
 </script>
 
 <template>
@@ -73,15 +128,17 @@ const submit = () => {
                     </SecondaryButton>
                 </div>
                 <div class="flex items-center justify-end mt-4">
-                    <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                    <PrimaryButton :class="{ 'opacity-25': form.processing }" :disabled="form.processing"
+                        @click="checkEmailExists">
                         Reset Password
                     </PrimaryButton>
+
                 </div>
             </div>
         </form>
 
         <!-- Modal -->
-        <div v-if="showModal" class="fixed inset-0 flex items-center justify-center bg-gray-600 bg-opacity-50 z-50">
+        <div v-if="showModal && emailExists" class="fixed inset-0 flex items-center justify-center bg-gray-600 bg-opacity-50 z-50">
             <div class="bg-white p-8 rounded-lg shadow-xl w-1/2 max-w-lg">
                 <!-- Modal header -->
                 <div
@@ -104,27 +161,35 @@ const submit = () => {
                 </div>
                 <form class="space-y-4 my-5" action="#">
                     <div>
-                        <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                            Vetify code</label>
-                        <input type="email" name="email" id="email"
+                        <label for="verify" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                            verify code</label>
+                        <input type="text" name="verify" id="verify" v-model="form.verify"
                             class="bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
-                            placeholder="Vetify code" required />
+                            placeholder="verify code" required />
                     </div>
                     <div>
                         <label for="password"
                             class="block mb-2 text-sm font-medium text-gray-900 placeholder-gray-400 dark:text-white">New
                             password</label>
                         <input type="password" name="password" id="password" placeholder="New password"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
-                            required />
+                            v-model="form.password"
+                            class="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+                            :class="{
+                                'border-red-500 ring-1 ring-red-300': passwordMismatch,
+                                'text-gray-900 placeholder-gray-400': !passwordMismatch
+                            }" required />
                     </div>
                     <div>
                         <label for="password"
                             class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Confirm new
                             password</label>
-                        <input type="password" name="password" id="password" placeholder="Confirm new password"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
-                            required />
+                        <input type="password" name="password" id="password_confirmation"
+                            placeholder="Confirm new password" v-model="form.password_confirmation"
+                            class="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+                            :class="{
+                                'border-red-500 ring-1 ring-red-300': passwordMismatch,
+                                'text-gray-900 placeholder-gray-400': !passwordMismatch
+                            }" required />
                     </div>
 
 
@@ -134,7 +199,9 @@ const submit = () => {
                     <SecondaryButton @click="closeModal" class="">
                         Cancel
                     </SecondaryButton>
-                    <PrimaryButton @click="submit" class="ml-auto">
+                    <PrimaryButton @click="submitReset" class="ml-auto"
+                        :class="{ 'opacity-25': form.processing || passwordMismatch }"
+                        :disabled="form.processing || passwordMismatch">
                         Confirm
                     </PrimaryButton>
                 </div>

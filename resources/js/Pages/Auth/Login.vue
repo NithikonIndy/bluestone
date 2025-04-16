@@ -5,6 +5,7 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 defineProps({
     canResetPassword: {
@@ -23,8 +24,8 @@ const form = useForm({
 
 const submit = () => {
     form.post(route('login'), {
-        onFinish: () => form.reset('password'),
-    });
+            onFinish: () => form.reset('password'),
+        });
 };
 </script>
 
@@ -64,7 +65,7 @@ const submit = () => {
                 </label>
             </div>
 
-            <div className="block my-4">
+            <div class="block my-4">
                 <p class="text-sm text-gray-600"> Don’t have an account? <a href="/register"
                         class="underline text-blue-600 hover:text-blue-900">Register now!</a></p>
             </div>
@@ -75,7 +76,7 @@ const submit = () => {
                 Forgot your password?
                 </Link>
 
-                <PrimaryButton class="ms-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                <PrimaryButton class="ms-4" :class="{ 'opacity-25': form.processing}" :disabled="form.processing ">
                     Log in
                 </PrimaryButton>
             </div>
