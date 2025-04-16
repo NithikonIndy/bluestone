@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\User;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -50,4 +51,16 @@ class AuthenticatedSessionController extends Controller
 
         return redirect('/');
     }
+
+    public function checkEmail(Request $request)
+    {
+        $emailExists = User::where('email', $request->email)->exists();
+    
+        if ($emailExists) {
+            return response()->json(['exists' => true]);
+        } else {
+            return response()->json(['error' => 'usernotfound'], 404);
+        }
+    }
+    
 }

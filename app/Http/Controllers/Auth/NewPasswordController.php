@@ -13,6 +13,8 @@ use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\User;
+
 
 class NewPasswordController extends Controller
 {
@@ -66,4 +68,35 @@ class NewPasswordController extends Controller
             'email' => [trans($status)],
         ]);
     }
+
+    public function reset(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'verify' => 'required',
+            'email' => 'required|email',
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ]);
+
+        // Here we will attempt to reset the user's password. If it is successful we
+        // will update the password on an actual user model and persist it to the
+        // database. Otherwise we will parse the error and return the response.
+        $user = User::where('email', $request->email)->first();
+
+        if (! $user) {
+            throw ValidationException::withMessages([
+                'email' => ['User not found.'],
+            ]);
+        }
+
+        $user->forceFill([
+            'password' => Hash::make($request->password),
+            'remember_token' => Str::random(60),
+        ])->save();
+
+        event(new PasswordReset($user));
+
+        return redirect()->route('login')->with('status', 'Password reset successful!');
+    }
 }
+
+
