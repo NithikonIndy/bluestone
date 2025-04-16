@@ -15,6 +15,7 @@ npm install
 
 # Migration database
 php artisan migrate
+
 **Don't forget add .env
 
 # Run Backend
